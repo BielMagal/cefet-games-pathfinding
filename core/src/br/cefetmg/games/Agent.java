@@ -6,6 +6,9 @@ import br.cefetmg.games.movement.Steering;
 import br.cefetmg.games.movement.Target;
 import br.cefetmg.games.movement.behavior.Algorithm;
 import br.cefetmg.games.movement.behavior.Seek;
+import br.cefetmg.games.pathfinding.HeuristicEcleudian;
+import br.cefetmg.games.pathfinding.HeuristicManhatan;
+import br.cefetmg.games.pathfinding.HeuristicNulo;
 import br.cefetmg.games.pathfinding.TileConnection;
 import br.cefetmg.games.pathfinding.TileNode;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
@@ -58,28 +61,27 @@ public class Agent {
     public void update(float delta) {
         shouldMove = true;
 
-        // verifica se atingimos nosso objetivo imediato
+		
         if (position.coords.dst2(steeringTarget.coords) < MIN_DISTANCE_CONSIDERED_ZERO_SQUARED) {
-            // procurar se temos outra conexão na nossa rota
-            // e, caso afirmativo, definir o nó de chegada como novo target
+			
             if (shouldMove = pathIterator.hasNext()) {
                 TileConnection nextConnection = pathIterator.next();
                 nextNode = nextConnection.getToNode();
                 steeringTarget.coords = nextNode.getPosition();
 
-                // atualiza a velocidade do "seek" de acordo com o terreno (a conexão)
+				
                 this.seek.maxSpeed = fullSpeed - (fullSpeed / 2.0f) * (nextConnection.getCost() - 1) / (LevelManager.maxCost - 1);
             }
         } else if (position.coords.dst2(steeringTarget.coords) < MIN_DISTANCE_CONSIDERED_ZERO_SQUARED * 6) {
             currentNode = nextNode;
         }
 
-        // integra
+		
         if (shouldMove) {
             Steering steering = seek.steer(this.position);
             position.integrate(steering, delta);
 
-            // verifica o vetor velocidade para determinar a orientação
+			
             float angle = steering.velocity.angle();
             int quadrant = (int) (((int) angle + (360 - 67.5f)) / 45) % 8;
             facing = Facing.values()[(8 - quadrant) % 8];
@@ -93,6 +95,7 @@ public class Agent {
      * @param y coordenada y do ponteiro do mouse.
      */
     public void setGoal(int x, int y) {
+		
         TileNode startNode = LevelManager.graph
                 .getNodeAtCoordinates(
                         (int) this.position.coords.x,
@@ -102,18 +105,10 @@ public class Agent {
 
         path.clear();
         pathFinder.metrics.reset();
-        // AQUI ESTAMOS CHAMANDO O ALGORITMO A* (instância pathFinder) 
+		
+		
         pathFinder.searchConnectionPath(startNode, targetNode, 
-                new Heuristic<TileNode>() { 
- 
-            @Override 
-            public float estimate(TileNode n, TileNode n1) { 
-                throw new UnsupportedOperationException("Deveria ter retornado "
-                        + "um valor para a heurística no arquivo "
-                        + "Agent.java:107, mas o professor resolveu explodir "
-                        + "o programa e deixar você consertar ;)"); 
-            } 
-        }, path); 
+                new HeuristicManhatan() , path); 
         pathIterator = path.iterator();
     }
 
